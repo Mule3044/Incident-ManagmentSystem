@@ -1,0 +1,591 @@
+{% extends 'FieldOfficerManagment/base_map.html' %}
+{% block title %}Display map{% endblock %}
+
+{% block header %}
+
+     <style>
+      .ol-popup {
+        position: absolute;
+        background-color: white;
+        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #cccccc;
+        bottom: 12px;
+        left: -50px;
+        min-width: 280px;
+      }
+      .ol-popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+      }
+      .ol-popup:after {
+        border-top-color: white;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+      }
+      .ol-popup:before {
+        border-top-color: #cccccc;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+      }
+      .ol-popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+      }
+      .ol-popup-closer:after {
+        content: "✖";
+      }
+    </style>
+{% endblock %}
+{% block body %}
+<div class="container-fluid map-container">
+
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h3>Create New  Incident</h3>
+                    {% if error_message %}
+                        <p><strong>{{ error_message }}</strong></p>
+                    {% endif %}
+                    <form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                         <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_incidentType">IncidentType:</label></label>
+        <div class="col-md-7"><select name="incidentType" required id="id_incidentType" class="col-sm-10">
+
+			<option value = "">Select incident type</option>
+                            {% for item in incidentTypeList %}
+
+                                 <option value = "{{item.id}}">{{item.name}}</option>
+
+
+                        {% endfor %}
+
+		</select></div>
+    </div>
+
+
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_woreda">Woreda:</label></label>
+        <div class="col-md-7">
+            <select name="woredaList" required id="id_woredaList" class="col-sm-10" onchange="selectWoreda()">
+
+			<option value = "">Select Woreda</option>
+                            {% for item in woreda_List %}
+
+                                 <option value = "{{item.gid}}">{{item.woreda}}</option>
+
+
+                        {% endfor %}
+
+		</select>
+            <input type="hidden" name="woreda"  required id="id_woreda" maxlength="250" class="col-sm-10" />
+
+        </div>
+    </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_placeName">PlaceName:</label></label>
+        <div class="col-md-7"><input type="text" name="placeName"  required id="id_placeName" maxlength="250" class="col-sm-10" /></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_callerName">CallerName:</label></label>
+        <div class="col-md-7"><input type="text" name="callerName"  required id="id_callerName" maxlength="250" class="col-sm-10"/></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_phoneNumber">PhoneNumber:</label></label>
+        <div class="col-md-7"><input type="text" name="phoneNumber"  required id="id_phoneNumber" maxlength="250" class="col-sm-10"/></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_description">Description:</label></label>
+        <div class="col-md-7"><input type="text" name="description"  required id="id_description" maxlength="1000" class="col-sm-10"/></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_incidentDate">IncidentDate:</label></label>
+        <div class="col-md-7"><input type="text" name="incidentDate"  required id="id_incidentDate" onchange="dayParameter()" class="col-sm-10 datefield"/></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_latitude">Latitude:</label></label>
+        <div class="col-md-7"><input type="number" name="latitude"  step="any" required id="id_latitude" class="col-sm-10"/></div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+        <label class="control-label col-sm-5" for="fieldOfficer"><label for="id_longitude">Longitude:</label></label>
+        <div class="col-md-7"><input type="number" name="longitude"  step="any" required id="id_longitude" class="col-sm-10"/></div>
+    </div>
+
+    <div class="form-group" style="display: none">
+        <div class="col-sm-offset-2 col-sm-10">
+            <span class="text-danger small"></span>
+        </div>
+
+        <div class="col-md-7"><input type="text" name="status" value="unhandled" required id="id_status" maxlength="250" /></div>
+    </div>
+
+{#                         {% include 'IncidentManagment/form_template.html' %}#}
+
+
+                          <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-12">
+                                    <span class="text-danger small"></span>
+                                </div>
+                          </div>
+
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button type="submit" class="btn btn-success">Submit</button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+
+            <form class="form-inline" style="display: none">
+      <label>Geometry type &nbsp;</label>
+      <select id="type">
+        <option value="Point">Point</option>
+
+      </select>
+    </form>
+            <button id="clear">clear</button>
+            <div id="map" class="map"></div>
+            <div id="popup" class="ol-popup">
+              <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+              <div id="popup-content"></div>
+            </div>
+
+             <div id="wrapper">
+                <div id="location"></div>
+                <div id="scale"></div>
+            </div>
+
+            <div id="nodelist">
+                <em>Click on the map to get feature info</em>
+            </div>
+        </div>
+   </div>
+</div>
+    <script type="text/javascript">
+    var selectedfeature=null;
+      var pureCoverage = false;
+      // if this is just a coverage or a group of them, disable a few items,
+      // and default to jpeg format
+    var format = 'image/png';
+    var bounds =   [38.6795654296875, 8.90046215057373,
+                    38.7780685424805, 9.00061702728271];
+
+	var mousePositionControl = new ol.control.MousePosition({
+        className: 'custom-mouse-position',
+        target: document.getElementById('location'),
+        coordinateFormat: ol.coordinate.createStringXY(5),
+        undefinedHTML: '&nbsp;'
+      });
+    var osmLayer=new ol.layer.Tile({
+            source: new ol.source.OSM()
+          });
+    var tiled = new ol.layer.Tile({
+
+        source: new ol.source.TileWMS({
+          url: 'http://localhost:8080/geoserver/IncidentManagment/wms',
+          params: {'FORMAT': format,
+                   'VERSION': '1.1.1',
+                   tiled: true,
+                LAYERS: 'IncidentManagment:{{ lay1.name }}',
+                STYLES: ''
+
+          }
+        })
+      });
+    var vectorWorda = new ol.layer.Vector({
+        source: new ol.source.Vector({
+
+              url: 'http://localhost:8080/geoserver/IncidentManagment/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=IncidentManagment:nfs_woredas&outputFormat=application/json',
+             format: new ol.format.GeoJSON()
+
+            }),
+        style: new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#000000',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                   color: 'transparent'
+                })
+            })
+
+         });
+
+
+    var vector = new ol.layer.Vector({
+        source: new ol.source.Vector({
+
+              url: 'http://localhost:8080/geoserver/IncidentManagment/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=IncidentManagment:nfs_policestations&outputFormat=application/json',
+             format: new ol.format.GeoJSON()
+
+            }),
+        style: new ol.style.Style({
+
+                image: new ol.style.Circle({
+                    radius: 8,
+                    fill: new ol.style.Fill({
+                        color: 'red'
+                    })
+                })
+            })
+
+        });
+
+
+    var vectorPoliceStallSource=new ol.source.Vector({
+
+              url: 'http://localhost:8080/geoserver/IncidentManagment/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=IncidentManagment:nfs_policestalls&outputFormat=application%2Fjson' ,
+             format: new ol.format.GeoJSON()
+
+            });
+    vectorPoliceStall = new ol.layer.Vector({
+        source: vectorPoliceStallSource,
+        style: new ol.style.Style({
+
+                image: new ol.style.Circle({
+                    radius: 6,
+                    fill: new ol.style.Fill({
+                        color: 'blue'
+                    })
+                })
+            })
+
+        });
+
+
+    var tiledRoads = new ol.layer.Tile({
+        visible: true,
+        source: new ol.source.TileWMS({
+          url: 'http://localhost:8080/geoserver/IncidentManagment/wms',
+          params: {'FORMAT': format,
+                   'VERSION': '1.1.1',
+                   tiled: true,
+                STYLES: '',
+                LAYERS: 'IncidentManagment:nfs_new_roads'
+          }
+        })
+      });
+
+    var projection = new ol.proj.Projection({
+          code: 'EPSG:4326',
+          units: 'degrees',
+          axisOrientation: 'neu'
+      });
+
+
+    var map = new ol.Map({
+          controls: ol.control.defaults({attribution: false}).extend([mousePositionControl]),
+          target: 'map',
+          layers: [osmLayer,tiled,tiledRoads,vectorWorda,vector,vectorPoliceStall],
+
+          view: new ol.View({
+           projection: projection
+        })
+      });
+
+
+    var params = {
+		LAYERS: 'IncidentManagment:routing',
+		FORMAT: 'image/png',
+		'VERSION': '1.3.0'
+	  };
+
+
+	  // The "start" and "destination" features.
+	var startPoint = new ol.Feature();
+	var destPoint = new ol.Feature();
+
+	  // The vector layer used to display the "start" and "destination" features.
+	var vectorLayer = new ol.layer.Vector({
+		source: new ol.source.Vector({
+		  features: [startPoint,destPoint]
+		})
+	  });
+
+    map.addLayer(vectorLayer);
+
+ // A transform function to convert coordinates from EPSG:3857
+  // to EPSG:4326.
+ // var transform = ol.proj.getTransform('EPSG:3857', 'EPSG:4326');
+
+  // Register a map click listener.
+    map.on('click', function(event) {
+     if (startPoint.getGeometry() == null) {
+      // First click.
+      startPoint.setGeometry(new ol.geom.Point(event.coordinate));
+    var closest = vectorPoliceStallSource.getClosestFeatureToCoordinate(event.coordinate);
+      destPoint=closest;
+      // Transform the coordinates from the map projection (EPSG:3857)
+      // to the server projection (EPSG:4326).
+    var startCoord = startPoint.getGeometry().getCoordinates();
+    var destCoord = destPoint.getGeometry().getCoordinates();
+    var viewparams = [
+        'x1:' + startCoord[0], 'y1:' + startCoord[1],
+        'x2:' + destCoord[0], 'y2:' + destCoord[1]
+      ];
+      params.viewparams = viewparams.join(';');
+      result = new ol.layer.Image({
+        source: new ol.source.ImageWMS({
+          ratio: 1,
+          url: 'http://localhost:8080/geoserver/IncidentManagment/wms',
+          params: params
+        })
+      });
+      map.addLayer(result);
+
+    var coord =  event.coordinate;
+            //For point geometries Coordinates returns an array of 2 numbers. The first number is the x coordinate.
+            // The second number is the y coordinate.
+            //And if you want to convert coord to a longitude and a latitude use:
+           // coord = ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326');
+    var lon = coord[0];
+    var lat = coord[1];
+            document.getElementById('id_latitude').value=lat;
+            document.getElementById('id_longitude').value=lon;
+		}
+		  else
+		{
+    var feature = map.forEachFeatureAtPixel(event.pixel,
+            function(feature) {
+              return feature;
+            });
+        if (feature) {
+    var coordinate = feature.getGeometry().getCoordinates();
+
+
+    var  items = '';
+        //var dateValue = new Date(document.getElementById('id_incidentDate').value);
+ 
+    // var date = document.getElementById('id_incidentDate').value.split('/');
+    // var newDate =  date[2] + '-' + date[1]  + '-' + date[0];
+    // var dt =newDate;
+    // document.getElementById('id_incidentDate').value=dt;
+       var today = new Date();
+
+        var day = new Date(today.getTime());
+        var day_splited = day.toISOString().split('T')[0];
+        var dayParameter = function () {
+          return day_splited;
+        };
+        $.ajax({
+            url: '/getOfficersByPoliceStall/' +  feature.get('stallname') + '/' + dayParameter() + '/',
+            type: "GET",
+            dataType: "JSON",
+
+            success: function (data) {
+
+
+
+
+                items = '<br/><table border=1><tr><th>No.</th><th>Officer Name</th><th>Phone Number</th></tr>';
+
+    var json = $.parseJSON(data);
+
+                for (var i = 0; i < json.length; i++) {
+                    var number=i + 1;
+                    items += "<tr><td>"+ number + "</td><td>" + json[i].firstName + " " + json[i].lastName + "</td>" + "<td>" + json[i].phoneNumber  + "</td> </tr>";
+                }
+
+                items += '</table>';
+				
+                 content.innerHTML =  items ;
+            }
+        });
+
+				overlay.setPosition(coordinate);
+			}
+
+		}
+	  });
+
+
+    var clearButton = document.getElementById('clear');
+	  clearButton.addEventListener('click', function(event) {
+		// Reset the "start" and "destination" features.
+		startPoint.setGeometry(null);
+
+		// Remove the result layer.
+		map.removeLayer(result);
+	  });
+
+
+    /**
+       * Elements that make up the popup.
+       */
+    var container = document.getElementById('popup');
+    var content = document.getElementById('popup-content');
+    var closer = document.getElementById('popup-closer');
+
+      /**
+       * Create an overlay to anchor the popup to the map.
+       */
+    var overlay = new ol.Overlay(/** @type {olx.OverlayOptions} */ ({
+        element: container,
+        autoPan: true,
+        autoPanAnimation: {
+          duration: 250
+        }
+      }));
+
+
+      /**
+       * Add a click handler to hide the popup.
+       * @return {boolean} Don't follow the href.
+       */
+      closer.onclick = function() {
+        overlay.setPosition(undefined);
+        closer.blur();
+        return false;
+      };
+
+
+      map.addOverlay(overlay);
+
+      map.getView().on('change:resolution', function(evt) {
+        var resolution = evt.target.get('resolution');
+        var units = map.getView().getProjection().getUnits();
+        var dpi = 25.4 / 0.28;
+        var mpu = ol.proj.METERS_PER_UNIT[units];
+        var scale = resolution * mpu * 39.37 * dpi;
+        if (scale >= 9500 && scale <= 950000) {
+          scale = Math.round(scale / 1000) + "K";
+        } else if (scale >= 950000) {
+          scale = Math.round(scale / 1000000) + "M";
+        } else {
+          scale = Math.round(scale);
+        }
+        document.getElementById('scale').innerHTML = "Scale = 1 : " + scale;
+      });
+
+
+      map.getView().fit(bounds, map.getSize());
+      map.on('singleclick', function(evt) {
+        document.getElementById('nodelist').innerHTML = "Loading... please wait...";
+        var view = map.getView();
+        var viewResolution = view.getResolution();
+        var source =tiled.getSource();
+        var url = source.getGetFeatureInfoUrl(
+          evt.coordinate, viewResolution, view.getProjection(),
+          {'INFO_FORMAT': 'text/html', 'FEATURE_COUNT': 50});
+        if (url) {
+          document.getElementById('nodelist').innerHTML = '<iframe class="col-sm-12" seamless src="' + url + '"></iframe>';
+
+
+
+        }
+
+
+      });
+
+
+
+
+
+
+  function selectWoreda() {
+        var woreda =     $("#id_woredaList option:selected").text();
+        var id =     document.getElementById('id_woredaList').value;
+
+        document.getElementById('id_woreda').value = woreda;
+
+
+        var previousSelectedFeature=selectedfeature;
+
+
+        if(previousSelectedFeature)
+        {
+             selectedfeature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#b30734',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: [51, 51, 51, .7]
+                })
+            }));
+
+
+        vectorWorda.getSource().addFeatures(previousSelectedFeature);
+        }
+        selectedfeature = vectorWorda.getSource().getFeatureById("nfs_woredas."+id)
+
+
+        selectedfeature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#b30734',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: [100, 24, 3, .2]
+                })
+            }));
+
+
+        vectorWorda.getSource().addFeatures(selectedfeature);
+
+
+
+
+
+
+        map.getView().fit(vectorWorda.getSource().getExtent(), (map.getSize()));
+    }
+    </script>
+
+{% endblock %}
